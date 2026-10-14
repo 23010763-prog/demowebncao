@@ -8,7 +8,38 @@ app.use(cors({ origin: '*' }));
 app.use(express.json());
 
 app.get('/api/data', (req, res) => {
-  res.json({ message: 'Hello from Node.js server!' });
+  res.json({
+    message: 'Hello from Node.js server!',
+    items: [
+      {
+        id: 1,
+        category: 'Student life',
+        date: 'Jun 12, 2026',
+        title: 'Big ideas start in the classroom',
+        summary: 'From lectures to labs, Phenikaa students turn curious questions into projects that serve their communities.',
+        image: 'https://images.unsplash.com/photo-1523240795612-9a054b0db644?auto=format&fit=crop&w=1000&q=85',
+        imageAlt: 'Students celebrating their graduation'
+      },
+      {
+        id: 2,
+        category: 'Research',
+        date: 'Jun 8, 2026',
+        title: 'Research with real-world impact',
+        summary: 'Young research teams are bringing interdisciplinary ideas closer to the challenges people face every day.',
+        image: 'https://images.unsplash.com/photo-1532094349884-543bc11b234d?auto=format&fit=crop&w=1000&q=85',
+        imageAlt: 'A researcher working in a laboratory'
+      },
+      {
+        id: 3,
+        category: 'Community',
+        date: 'Jun 2, 2026',
+        title: 'A community ready to make a difference',
+        summary: 'A diverse campus community shares experiences, inspiration, and a commitment to a more sustainable future.',
+        image: 'https://images.unsplash.com/photo-1523580494863-6f3031224c94?auto=format&fit=crop&w=1000&q=85',
+        imageAlt: 'Students learning and talking together'
+      }
+    ]
+  });
 });
 
 // ROUTE XỬ LÝ POST VÀ IN LOG RA TERMINAL
