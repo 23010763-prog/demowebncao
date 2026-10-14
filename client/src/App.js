@@ -1,16 +1,55 @@
 import React, { useEffect, useState } from 'react';
 import './App.css';
 
+const storyColumns = [
+  { key: 'title', label: 'Story' },
+  { key: 'category', label: 'Category' },
+  { key: 'date', label: 'Date' },
+  { key: 'summary', label: 'Summary' }
+];
+
 function App() {
   const [stories, setStories] = useState([]);
   const [status, setStatus] = useState('loading');
   const [requestVersion, setRequestVersion] = useState(0);
   const [navOpen, setNavOpen] = useState(false);
   const [optionsOpen, setOptionsOpen] = useState(false);
+  const [filters, setFilters] = useState({});
+  const [sort, setSort] = useState({ key: null, direction: 'ascending' });
+  const [page, setPage] = useState(1);
 
   const closeNavigation = () => {
     setNavOpen(false);
     setOptionsOpen(false);
+  };
+
+  const visibleStories = stories
+    .filter((story) => storyColumns.every(({ key }) => (
+      String(story[key] || '').toLocaleLowerCase().includes((filters[key] || '').trim().toLocaleLowerCase())
+    )))
+    .sort((first, second) => {
+      if (!sort.key) return 0;
+
+      const firstValue = String(first[sort.key] || '');
+      const secondValue = String(second[sort.key] || '');
+      const firstDate = sort.key === 'date' ? Date.parse(firstValue) : NaN;
+      const secondDate = sort.key === 'date' ? Date.parse(secondValue) : NaN;
+      const comparison = !Number.isNaN(firstDate) && !Number.isNaN(secondDate)
+        ? firstDate - secondDate
+        : firstValue.localeCompare(secondValue, undefined, { numeric: true, sensitivity: 'base' });
+
+      return sort.direction === 'ascending' ? comparison : -comparison;
+    });
+  const pageSize = 10;
+  const pageCount = Math.max(1, Math.ceil(visibleStories.length / pageSize));
+  const pageStories = visibleStories.slice((page - 1) * pageSize, page * pageSize);
+
+  const sortBy = (key) => {
+    setSort((currentSort) => ({
+      key,
+      direction: currentSort.key === key && currentSort.direction === 'ascending' ? 'descending' : 'ascending'
+    }));
+    setPage(1);
   };
 
   useEffect(() => {
@@ -119,18 +158,85 @@ function App() {
           )}
           {status === 'success' && stories.length === 0 && <p className="notice">No stories to show yet.</p>}
           {status === 'success' && stories.length > 0 && (
-            <div className="story-grid">
-              {stories.map((story, index) => (
-                <article className="story" key={story.id}>
-                  <div className="story__image-wrap">
-                    <img className="story__image" src={story.image} alt={story.imageAlt} loading="lazy" />
-                    <span className="story__number">0{index + 1}</span>
-                  </div>
-                  <div className="story__meta"><span>{story.category}</span><time>{story.date}</time></div>
-                  <h3>{story.title}</h3>
-                  <p>{story.summary}</p>
-                </article>
-              ))}
+            <div className="story-grid-wrap">
+              <p className="grid-result-count" role="status">
+                Showing {visibleStories.length === 0 ? 0 : (page - 1) * pageSize + 1}–
+                {Math.min(page * pageSize, visibleStories.length)} of {visibleStories.length} stories
+              </p>
+              <div className="story-grid-scroll">
+                <table className="story-grid">
+                  <thead>
+                    <tr>
+                      {storyColumns.map(({ key, label }) => (
+                        <th key={key} scope="col" aria-sort={sort.key === key ? sort.direction : 'none'}>
+                          <button className="grid-sort" type="button" onClick={() => sortBy(key)}>
+                            {label}
+                            <span aria-hidden="true">
+                              {sort.key === key ? (sort.direction === 'ascending' ? '↑' : '↓') : '↕'}
+                            </span>
+                          </button>
+                        </th>
+                      ))}
+                    </tr>
+                    <tr className="grid-filter-row">
+                      {storyColumns.map(({ key, label }) => (
+                        <th key={key} scope="col">
+                          <input
+                            type="search"
+                            aria-label={`Filter by ${label}`}
+                            placeholder={`Filter ${label.toLowerCase()}...`}
+                            value={filters[key] || ''}
+                            onChange={(event) => {
+                              setFilters((currentFilters) => ({
+                                ...currentFilters,
+                                [key]: event.target.value
+                              }));
+                              setPage(1);
+                            }}
+                          />
+                        </th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {pageStories.map((story) => (
+                      <tr key={story.id}>
+                        <th className="grid-story-title" scope="row">
+                          <div className="grid-story">
+                            <img src={story.image} alt={story.imageAlt} loading="lazy" />
+                            <span>{story.title}</span>
+                          </div>
+                        </th>
+                        <td>{story.category}</td>
+                        <td>{story.date}</td>
+                        <td>{story.summary}</td>
+                      </tr>
+                    ))}
+                    {visibleStories.length === 0 && (
+                      <tr>
+                        <td className="grid-empty" colSpan={storyColumns.length}>No stories match your filters.</td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+              <nav className="grid-pagination" aria-label="Story pages">
+                <button
+                  type="button"
+                  onClick={() => setPage((currentPage) => Math.max(1, currentPage - 1))}
+                  disabled={page === 1}
+                >
+                  Previous
+                </button>
+                <span>Page {page} of {pageCount}</span>
+                <button
+                  type="button"
+                  onClick={() => setPage((currentPage) => Math.min(pageCount, currentPage + 1))}
+                  disabled={page >= pageCount}
+                >
+                  Next
+                </button>
+              </nav>
             </div>
           )}
         </section>
