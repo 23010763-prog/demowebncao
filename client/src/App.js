@@ -5,6 +5,13 @@ function App() {
   const [stories, setStories] = useState([]);
   const [status, setStatus] = useState('loading');
   const [requestVersion, setRequestVersion] = useState(0);
+  const [navOpen, setNavOpen] = useState(false);
+  const [optionsOpen, setOptionsOpen] = useState(false);
+
+  const closeNavigation = () => {
+    setNavOpen(false);
+    setOptionsOpen(false);
+  };
 
   useEffect(() => {
     let isCurrent = true;
@@ -36,17 +43,48 @@ function App() {
 
   return (
     <div className="site-shell">
-      <header className="site-header">
-        <a className="brand" href="#top" aria-label="Phenikaa, back to top">
+      <header className={`site-header${navOpen ? ' site-header--open' : ''}`}>
+        <a className="brand" href="#top" aria-label="Phenikaa, back to top" onClick={closeNavigation}>
           <span className="brand__mark">P</span>
           <span className="brand__name">PHENIKAA</span>
         </a>
-        <nav className="main-nav" aria-label="Main navigation">
-          <a href="#top">Home</a>
-          <a href="#stories">Explore</a>
-          <a href="#footer">Contact</a>
-        </nav>
-        <a className="header-link" href="#stories">Latest <span aria-hidden="true">↗</span></a>
+        <button
+          className="menu-toggle"
+          type="button"
+          aria-label={navOpen ? 'Close navigation' : 'Open navigation'}
+          aria-controls="site-navigation"
+          aria-expanded={navOpen}
+          onClick={() => {
+            setNavOpen((isOpen) => !isOpen);
+            setOptionsOpen(false);
+          }}
+        >
+          <span />
+          <span />
+          <span />
+        </button>
+        <div className="header-links" id="site-navigation">
+          <nav className="main-nav" aria-label="Main navigation">
+            <a href="#top" onClick={closeNavigation}>Home</a>
+            <a href="#stories" onClick={closeNavigation}>Link</a>
+          </nav>
+          <div className="nav-dropdown">
+            <button
+              className="options-toggle"
+              type="button"
+              aria-expanded={optionsOpen}
+              aria-controls="options-menu"
+              onClick={() => setOptionsOpen((isOpen) => !isOpen)}
+            >
+              Options <span className="options-caret" aria-hidden="true" />
+            </button>
+            <div className={`options-menu${optionsOpen ? ' options-menu--open' : ''}`} id="options-menu" role="menu" hidden={!optionsOpen}>
+              <a href="#stories" role="menuitem" onClick={closeNavigation}>Latest stories</a>
+              <a href="#stories" role="menuitem" onClick={closeNavigation}>Research</a>
+              <a href="#footer" role="menuitem" onClick={closeNavigation}>Contact</a>
+            </div>
+          </div>
+        </div>
       </header>
 
       <main id="top">
